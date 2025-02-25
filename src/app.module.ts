@@ -5,6 +5,7 @@ import configuration from './config/configuration';
 import { ConfigModule } from '@nestjs/config';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { ExchangesModule } from './exchanges/exchanges.module';
+import { BridgesModule } from './bridges/bridges.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ExchangesModule } from './exchanges/exchanges.module';
     }),
     BlockchainModule,
     ExchangesModule,
+    BridgesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
