@@ -6,6 +6,7 @@ import { ExchangesModule } from '../exchanges/exchanges.module';
 import { BridgesModule } from '../bridges/bridges.module';
 import { BotsModule } from '../bots/bots.module';
 import { BlockchainModule } from '../blockchain/blockchain.module';
+import { ArbitrageController } from './arbitrage.controller';
 
 @Module({
   imports: [BlockchainModule, ExchangesModule, BridgesModule, BotsModule],
@@ -14,6 +15,7 @@ import { BlockchainModule } from '../blockchain/blockchain.module';
     OpportunityFinderService,
     ProfitabilityCalculatorService,
   ],
+  controllers: [ArbitrageController],
   exports: [ArbitrageService],
 })
 export class ArbitrageModule {}
