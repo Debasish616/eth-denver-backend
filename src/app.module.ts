@@ -8,6 +8,7 @@ import { ExchangesModule } from './exchanges/exchanges.module';
 import { BridgesModule } from './bridges/bridges.module';
 import { BotsModule } from './bots/bots.module';
 import { ArbitrageModule } from './arbitrage/arbitrage.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ArbitrageModule } from './arbitrage/arbitrage.module';
     BridgesModule,
     BotsModule,
     ArbitrageModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],
