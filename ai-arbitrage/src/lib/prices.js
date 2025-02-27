@@ -1,21 +1,29 @@
 const { ethers } = require('ethers');
-const { ChainId, Fetcher, Token } = require('@uniswap/sdk');
-const { ethProvider, SEPOLIA_DAI, SEPOLIA_WETH } = require('../config');
+const { unichainProvider, UNICHAIN_DAI, UNICHAIN_WETH } = require('../config');
+const AggregatorV3InterfaceABI = require('@chainlink/contracts/abi/v0.8/AggregatorV3Interface.json');
 
-// Placeholder Chainlink feed on Sepolia (replace with real address if available)
-const chainlinkABI = ['function latestRoundData() view returns (uint80, int256, uint256, uint256, uint80)'];
-const chainlinkFeed = new ethers.Contract('0xYOUR_SEPOLIA_CHAINLINK_ADDRESS', chainlinkABI, ethProvider);
+// Uniswap V4 Pool
+const poolAddress = "0xYourV4PoolAddress"; // Update after deployment
+const poolContract = new ethers.Contract(
+  poolAddress,
+  ["function slot0() view returns (uint160 sqrtPriceX96, int24 tick)"],
+  unichainProvider
+);
 
-async function getUniswapPrice() {
-  const dai = new Token(ChainId.SEPOLIA, SEPOLIA_DAI, 18);
-  const weth = new Token(ChainId.SEPOLIA, SEPOLIA_WETH, 18);
-  const pair = await Fetcher.fetchPairData(dai, weth, ethProvider);
-  return parseFloat(pair.token0Price.toSignificant(6));
+// Chainlink Price Feed (e.g., ETH/USD on Unichain Sepolia)
+const chainlinkFeedAddress = "0xYourChainlinkFeedAddress"; // Replace with real address
+const chainlinkContract = new ethers.Contract(chainlinkFeedAddress, AggregatorV3InterfaceABI, unichainProvider);
+
+async function getUniswapV4Price() {
+  const { sqrtPriceX96 } = await poolContract.slot0();
+  const price = (sqrtPriceX96 ** 2) / (2 ** 192); // Simplified price calc
+  return price; // Adjust for decimals
 }
 
-async function getPancakePrice() {
-  const roundData = await chainlinkFeed.latestRoundData();
-  return Number(ethers.utils.formatUnits(roundData[1], 8));
+async function getChainlinkPrice() {
+  const latestRoundData = await chainlinkContract.latestRoundData();
+  const price = ethers.utils.formatUnits(latestRoundData.answer, 8); // Chainlink returns 8 decimals
+  return parseFloat(price);
 }
 
-module.exports = { getUniswapPrice, getPancakePrice };
+module.exports = { getUniswapV4Price, getChainlinkPrice };
