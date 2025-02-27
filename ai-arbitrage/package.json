@@ -1,0 +1,24 @@
+{
+  "name": "arb-agent",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network holesky",
+    "test": "npx hardhat test"
+  },
+  "dependencies": {
+    "@uniswap/sdk": "^3.0.3",
+    "@wormhole-foundation/sdk": "^0.10.12",
+    "@wormhole-foundation/sdk-evm": "^1.10.0",
+    "@wormhole-foundation/sdk-evm-tokenbridge": "^1.10.0",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.22.0"
+  }
+}
