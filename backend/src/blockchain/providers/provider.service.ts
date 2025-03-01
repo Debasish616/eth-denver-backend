@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ethers, Wallet, JsonRpcProvider } from 'ethers';
+import { ethers, JsonRpcProvider, Wallet } from 'ethers';
 
 @Injectable()
 export class ProviderService {

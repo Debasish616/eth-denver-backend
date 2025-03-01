@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { formatEther, formatUnits, parseEther, parseUnits } from 'ethers';
+import { formatEther, formatUnits, parseUnits } from 'ethers';
 import { ProviderService } from 'src/blockchain/providers/provider.service';
 import { sleep } from 'src/common/utils/utils';
 import { OneInchService } from 'src/exchanges/oneinch/oneinch.service';

@@ -3,7 +3,7 @@ import { ArbitrageService } from './arbitrage.service';
 import { OpportunityFinderService } from './opportunity-finder.service';
 import { ApiKeyGuard } from '../common/guards/api-key.guard';
 
-@Controller('arbitrage')
+@Controller('opportunities')
 export class ArbitrageController {
   constructor(
     private readonly arbitrageService: ArbitrageService,
