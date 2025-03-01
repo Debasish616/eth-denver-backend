@@ -21,6 +21,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port');
 
+  app.enableCors();
   await app.listen(process.env.PORT ?? 3000);
   logger.log(`Arbitrage bot running on port ${port}`);
 }
