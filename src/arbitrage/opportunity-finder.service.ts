@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { formatEther, formatUnits, parseEther, parseUnits } from 'ethers';
 import { ProviderService } from 'src/blockchain/providers/provider.service';
+import { sleep } from 'src/common/utils/utils';
 import { OneInchService } from 'src/exchanges/oneinch/oneinch.service';
 
 export interface TokenConfig {
@@ -45,30 +46,30 @@ export class OpportunityFinderService {
       {
         symbol: 'USDC',
         address: {
-          ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          arbitrum: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
-          optimism: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
-          polygon: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+          ethereum: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          arbitrum: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8',
+          optimism: '0x7f5c764cbc14f9669b88837ca1490cca17c31607',
+          polygon: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
         },
         decimals: 6,
       },
       {
         symbol: 'WETH',
         address: {
-          ethereum: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          arbitrum: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+          ethereum: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+          arbitrum: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
           optimism: '0x4200000000000000000000000000000000000006',
-          polygon: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+          polygon: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
         },
         decimals: 18,
       },
       {
         symbol: 'WBTC',
         address: {
-          ethereum: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-          arbitrum: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
-          optimism: '0x68f180fcCe6836688e9084f035309E29Bf0A2095',
-          polygon: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
+          ethereum: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
+          arbitrum: '0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f',
+          optimism: '0x68f180fcce6836688e9084f035309e29bf0a2095',
+          polygon: '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6',
         },
         decimals: 8,
       },
@@ -79,43 +80,82 @@ export class OpportunityFinderService {
     const opportunities: ArbitrageOpportunity[] = [];
     const networks = this.providerService.getAllNetworks();
 
-    // For each token we're tracking
-    for (const token of this.trackedTokens) {
-      // Get prices on all networks
-      const prices: Record<string, number> = {};
+    // Fetch all token prices across all networks in one batch per network
+    const tokenPricesInUSDByNetwork: Record<
+      string,
+      Record<string, number>
+    > = {};
 
+    for (const network of networks) {
+      // Filter out only the tokens that exist on this network
+      const tokenAddresses = this.trackedTokens
+        .filter((token) => token.address[network])
+        .map((token) => token.address[network]);
+
+      try {
+        const tokenPrices = await this.oneInchService.getTokenPriceOnChainInUSD(
+          network,
+          tokenAddresses,
+        );
+
+        tokenPricesInUSDByNetwork[network] = tokenPrices;
+        this.logger.debug(
+          `Fetched prices for ${tokenAddresses.length} tokens on ${network}`,
+        );
+        await sleep(1500); // Rate limiting
+      } catch (error) {
+        this.logger.error(
+          `Failed to get token prices on ${network}: ${error.message}`,
+        );
+        tokenPricesInUSDByNetwork[network] = {};
+      }
+    }
+
+    // Find arbitrage opportunities for each token
+    for (const token of this.trackedTokens) {
+      this.logger.debug(`Checking arbitrage opportunities for ${token.symbol}`);
+
+      // Extract prices for this token on all networks
+      const tokenPricesByNetwork: Record<string, number> = {};
+
+      // Get token price by network
       for (const network of networks) {
-        if (token.address[network]) {
-          try {
-            const price = await this.getTokenPriceUSD(
-              network,
-              token.address[network],
-            );
-            prices[network] = price;
+        console.log(`Checking ${token.symbol} on ${network}`);
+
+        if (token.address[network] && tokenPricesInUSDByNetwork[network]) {
+          const price =
+            tokenPricesInUSDByNetwork[network][token.address[network]];
+
+          if (price) {
+            tokenPricesByNetwork[network] = price;
             this.logger.debug(`${token.symbol} price on ${network}: $${price}`);
-          } catch (error) {
-            this.logger.error(
-              `Failed to get ${token.symbol} price on ${network}: ${error.message}`,
-            );
           }
         }
       }
 
       // Find price differences between networks
       for (const sourceNetwork of networks) {
-        if (!prices[sourceNetwork]) continue;
+        if (!tokenPricesByNetwork[sourceNetwork]) continue;
 
         for (const targetNetwork of networks) {
-          if (sourceNetwork === targetNetwork || !prices[targetNetwork])
+          if (
+            sourceNetwork === targetNetwork ||
+            !tokenPricesByNetwork[targetNetwork]
+          )
             continue;
 
-          const priceDifferencePercent =
-            ((prices[targetNetwork] - prices[sourceNetwork]) /
-              prices[sourceNetwork]) *
-            100;
+          const sourcePriceUSD = tokenPricesByNetwork[sourceNetwork];
+          const targetPriceUSD = tokenPricesByNetwork[targetNetwork];
 
-          // Skip if the price difference is too small
+          const priceDifferencePercent =
+            ((targetPriceUSD - sourcePriceUSD) / sourcePriceUSD) * 100;
+
+          // Skip if the price difference is negative or too small
           if (priceDifferencePercent <= 0) continue;
+
+          this.logger.log(
+            `Price difference ${token.symbol} for between ${sourceNetwork} and ${targetNetwork}: ${priceDifferencePercent}%`,
+          );
 
           // Calculate estimated costs
           const estimatedGasCost = await this.estimateGasCosts(
@@ -136,8 +176,7 @@ export class OpportunityFinderService {
           // Calculate potential profit
           const tradeSize = maxTradeSize.toString();
           const tradeSizeUSD =
-            Number(ethers.utils.formatUnits(maxTradeSize, token.decimals)) *
-            prices[sourceNetwork];
+            Number(formatUnits(maxTradeSize, token.decimals)) * sourcePriceUSD;
           const estimatedProfit = (tradeSizeUSD * priceDifferencePercent) / 100;
           const netProfitUSD =
             estimatedProfit - estimatedGasCost - estimatedBridgeCost;
@@ -147,14 +186,15 @@ export class OpportunityFinderService {
           const minProfitThreshold = parseFloat(
             this.configService.get<string>('trading.minProfitThreshold')!,
           );
-          if (netProfitPercent < minProfitThreshold) continue;
 
-          opportunities.push({
+          // if (netProfitPercent < minProfitThreshold) continue;
+
+          const opportunity: ArbitrageOpportunity = {
             sourceNetwork,
             targetNetwork,
             token,
-            sourcePriceUSD: prices[sourceNetwork],
-            targetPriceUSD: prices[targetNetwork],
+            sourcePriceUSD,
+            targetPriceUSD,
             priceDifferencePercent,
             estimatedProfit,
             estimatedGasCost,
@@ -162,7 +202,9 @@ export class OpportunityFinderService {
             netProfitUSD,
             netProfitPercent,
             tradeSize,
-          });
+          };
+
+          opportunities.push(opportunity);
         }
       }
     }
@@ -177,28 +219,29 @@ export class OpportunityFinderService {
     network: string,
     tokenAddress: string,
   ): Promise<number> {
+    return 1;
     try {
       // For this example, we'll use 1inch to get token prices by quoting against USDC
       // In a production app, you might want to use a price oracle or aggregator
-      const usdcAddress = this.trackedTokens.find((t) => t.symbol === 'USDC')
-        ?.address[network];
-      if (!usdcAddress) {
-        throw new Error(`USDC address not found for network ${network}`);
-      }
-
+      // const usdcAddress = this.trackedTokens.find((t) => t.symbol === 'USDC')
+      //   ?.address[network];
+      // if (!usdcAddress) {
+      //   throw new Error(`USDC address not found for network ${network}`);
+      // }
       // Get a quote for 1 unit of the token to USDC
-
-      const oneUnit = parseEther('1'); // This assumes 18 decimals, adjust if needed
-      const quote = await this.oneInchService.getQuote(
-        network,
-        tokenAddress,
-        usdcAddress,
-        oneUnit.toString(),
-      );
-
+      // const oneUnit = parseEther('1'); // This assumes 18 decimals, adjust if needed
+      // const quote = await this.oneInchService.getQuote(
+      //   network,
+      //   tokenAddress,
+      //   usdcAddress,
+      //   oneUnit.toString(),
+      // );
+      // const usdPrice = await this.oneInchService.getTokenPriceUSD(network, [
+      //   tokenAddress,
+      // ]);
       // Convert to USD price (USDC is pegged to USD)
-      const priceInUSDC = Number(formatUnits(quote.toTokenAmount, 6)); // USDC has 6 decimals
-      return priceInUSDC;
+      // const priceInUSDC = Number(formatUnits(usdPrice, 6)); // USDC has 6 decimals
+      // return priceInUSDC;
     } catch (error) {
       this.logger.error(
         `Failed to get price for token ${tokenAddress} on ${network}: ${error.message}`,

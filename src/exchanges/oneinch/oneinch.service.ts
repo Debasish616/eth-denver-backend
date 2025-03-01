@@ -7,7 +7,7 @@ import { ProviderService } from '../../blockchain/providers/provider.service';
 @Injectable()
 export class OneInchService {
   private readonly logger = new Logger(OneInchService.name);
-  private readonly baseUrl = 'https://api.1inch.io/v5.0';
+  private readonly baseUrl = 'https://api.1inch.dev/swap/v6.0';
   private readonly apiKey: string;
   private readonly chainIds: Map<string, number> = new Map();
 
@@ -38,14 +38,58 @@ export class OneInchService {
 
       const response = await axios.get(`${this.baseUrl}/${chainId}/quote`, {
         params: {
-          fromTokenAddress: fromToken,
-          toTokenAddress: toToken,
+          src: fromToken,
+          dst: toToken,
           amount,
         },
         headers: this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {},
       });
 
       return response.data;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get quote from 1inch: ${(error as AxiosError)?.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async getTokenPriceOnChainInUSD(
+    network: string,
+    tokenAddresses: string[],
+  ): Promise<{
+    [key: string]: number;
+  }> {
+    try {
+      const chainId = this.chainIds.get(network);
+      if (!chainId) {
+        throw new Error(`Chain ID for network ${network} not found`);
+      }
+
+      const response = await axios.post(
+        `https://api.1inch.dev/price/v1.1/${chainId}`,
+        {
+          tokens: tokenAddresses,
+          currency: 'USD',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+        },
+      );
+
+      const data = response.data as {
+        [x: string]: string;
+      };
+
+      const dataParsed = {} as { [key: string]: number };
+
+      for (const [address, price] of Object.entries(data)) {
+        dataParsed[address] = parseFloat(price);
+      }
+
+      return dataParsed;
     } catch (error) {
       this.logger.error(
         `Failed to get quote from 1inch: ${(error as AxiosError)?.message}`,
