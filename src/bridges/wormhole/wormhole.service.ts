@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ethers, TransactionReceipt, ZeroAddress, zeroPadValue } from 'ethers';
+import {
+  ethers,
+  MaxUint256,
+  TransactionReceipt,
+  ZeroAddress,
+  zeroPadValue,
+} from 'ethers';
 import { ProviderService } from 'src/blockchain/providers/provider.service';
 
 // Wormhole Token Bridge ABI (simplified)
@@ -149,10 +155,7 @@ export class WormholeService {
       );
       if (allowance.lt(amount)) {
         // Approve max amount
-        const tx = await tokenContract.approve(
-          bridgeAddress,
-          ethers.constants.MaxUint256,
-        );
+        const tx = await tokenContract.approve(bridgeAddress, MaxUint256);
         await tx.wait();
         this.logger.log(
           `Approved Wormhole bridge for token ${tokenAddress} on ${network}`,

@@ -259,17 +259,21 @@ export class OpportunityFinderService {
       const sourceProvider = this.providerService.getProvider(sourceNetwork);
       const targetProvider = this.providerService.getProvider(targetNetwork);
 
-      const sourceGasPrice = await sourceProvider.getFeeData();
-      const targetGasPrice = await targetProvider.getFeeData();
+      const sourceGasPrice = BigInt(
+        (await sourceProvider.getFeeData()).gasPrice ?? 1,
+      );
+      const targetGasPrice = BigInt(
+        (await targetProvider.getFeeData()).gasPrice ?? 1,
+      );
 
       // Estimate gas usage (these are approximate values)
-      const sourceGasUsage = 250000; // For approval + swap on source chain
-      const targetGasUsage = 200000; // For swap on target chain
+      const sourceGasUsage = BigInt(250000); // For approval + swap on source chain
+      const targetGasUsage = BigInt(200000); // For swap on target chain
 
       // Calculate costs in ETH
       // TODO: Fix big int multiplication
-      const sourceGasCostETH = sourceGasPrice.gasPrice * sourceGasUsage;
-      const targetGasCostETH = targetGasPrice.gasPrice * targetGasUsage;
+      const sourceGasCostETH = sourceGasPrice * sourceGasUsage;
+      const targetGasCostETH = targetGasPrice * targetGasUsage;
 
       // Convert to USD (this is a simplified approach)
       // In a real app, you should get actual ETH prices for each chain

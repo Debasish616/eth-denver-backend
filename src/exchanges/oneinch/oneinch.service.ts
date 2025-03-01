@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import { ethers, MaxUint256, ZeroAddress } from 'ethers';
+import { ethers, MaxUint256, TransactionReceipt, ZeroAddress } from 'ethers';
 import { ProviderService } from '../../blockchain/providers/provider.service';
 
 @Injectable()
@@ -138,7 +138,7 @@ export class OneInchService {
     toToken: string,
     amount: string,
     slippage: string,
-  ): Promise<ethers.providers.TransactionReceipt> {
+  ): Promise<TransactionReceipt> {
     try {
       const wallet = this.providerService.getWallet(network);
       const fromAddress = wallet.address;
@@ -172,6 +172,10 @@ export class OneInchService {
       // Wait for transaction to be mined
       const receipt = await tx.wait();
       this.logger.log(`Swap transaction confirmed: ${receipt?.hash}`);
+
+      if (!receipt) {
+        throw new Error('Transaction failed');
+      }
 
       return receipt;
     } catch (error) {
