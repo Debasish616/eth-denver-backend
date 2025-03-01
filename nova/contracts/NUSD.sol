@@ -1,36 +1,80 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
+// Importing OpenZeppelin's ERC20 implementation for standard token functionality
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract NUSD is ERC20, Ownable {
-    address public swapContract;
+contract NUSD is ERC20, Ownable, AccessControl {
+    // Role definitions
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    modifier onlySwapContract() {
-        require(msg.sender == swapContract, "Only swap contract can call");
-        _;
+    // Event for minting
+    event Mint(address indexed to, uint256 amount);
+    // Event for burning
+    event Burn(address indexed from, uint256 amount);
+
+    // Constructor to initialize the token with name and symbol
+    constructor() ERC20("NUSD Stablecoin", "nUSD") Ownable(msg.sender) {
+        // Set up roles
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(BURNER_ROLE, msg.sender);
+        
+        // Initial supply (optional): mint 1,000,000 nUSD to deployer with 18 decimals
+        _mint(msg.sender, 1000000 * 10**decimals());
     }
 
-    constructor(address _swapContract) ERC20("Neutral USD", "nUSD") Ownable(msg.sender) {
-        require(_swapContract != address(0), "Invalid swap contract");
-        swapContract = _swapContract;
-    }
-
-    function mint(address to, uint256 amount) external onlySwapContract {
+    // Mint function - only minters can mint new tokens
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+        require(to != address(0), "Cannot mint to zero address");
+        require(amount > 0, "Mint amount must be greater than 0");
+        
         _mint(to, amount);
+        emit Mint(to, amount);
     }
 
-    function burn(address from, uint256 amount) external onlySwapContract {
-        _burn(from, amount);
+    // Burn function - anyone can burn their own tokens
+    function burn(uint256 amount) public {
+        require(amount > 0, "Burn amount must be greater than 0");
+        require(balanceOf(msg.sender) >= amount, "Insufficient balance to burn");
+        
+        _burn(msg.sender, amount);
+        emit Burn(msg.sender, amount);
     }
 
-    function setSwapContract(address _newSwapContract) external onlyOwner {
-        require(_newSwapContract != address(0), "Invalid new swap contract");
-        swapContract = _newSwapContract;
+    // Allow specific roles to burn tokens from any address (if approved)
+    function burnFrom(address account, uint256 amount) public onlyRole(BURNER_ROLE) {
+        require(account != address(0), "Cannot burn from zero address");
+        require(amount > 0, "Burn amount must be greater than 0");
+        
+        uint256 currentAllowance = allowance(account, msg.sender);
+        require(currentAllowance >= amount, "Burn amount exceeds allowance");
+        
+        _burn(account, amount);
+        emit Burn(account, amount);
     }
 
-    function decimals() public pure override returns (uint8) {
-        return 6; // USD-like precision (e.g., USDC)
+    // Function to recover tokens sent to contract by mistake
+    function recoverTokens(address tokenAddress, uint256 amount) public onlyOwner {
+        require(tokenAddress != address(this), "Cannot recover nUSD tokens");
+        IERC20(tokenAddress).transfer(owner(), amount);
+    }
+
+    // Override decimals to use 18 decimals
+    function decimals() public pure virtual override returns (uint8) {
+        return 18; // Standard ERC-20 decimal places
+    }
+    
+    // Required override for AccessControl when combined with other inheritance
+    function supportsInterface(bytes4 interfaceId) 
+        public 
+        view 
+        override(AccessControl) 
+        returns (bool) 
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
