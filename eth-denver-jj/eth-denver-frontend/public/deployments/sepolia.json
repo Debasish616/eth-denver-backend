@@ -9,7 +9,5 @@
     "wbtc": "0xd5A0734E62F0e74C80b97246261f14513aA54aed"
   },
   "network": "sepolia",
-  "timestamp": "2025-03-01T10:28:51.164Z",
-  "sNUSD": "0x3B5ff59263E7b6CE2bD009ceBFf18397B38494cc",
-  "stakingContract": "0x7681Eb0bF790063f6987AEadDf9dcA8E89652315"
-}
+  "timestamp": "2025-03-01T10:28:51.164Z"
+} 

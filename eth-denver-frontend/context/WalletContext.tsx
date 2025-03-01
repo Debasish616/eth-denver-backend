@@ -12,6 +12,7 @@ interface WalletContextType {
   provider: any | null;
   signer: any | null;
   getContract: (address: string, abi: any) => Contract | null;
+  deploymentInfo: any | null;
 }
 
 // Create the context with default values
@@ -23,6 +24,7 @@ const WalletContext = createContext<WalletContextType>({
   provider: null,
   signer: null,
   getContract: () => null,
+  deploymentInfo: null,
 });
 
 // Hook to use the wallet context
@@ -34,6 +36,26 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [provider, setProvider] = useState<any | null>(null);
   const [signer, setSigner] = useState<any | null>(null);
+  const [deploymentInfo, setDeploymentInfo] = useState<any | null>(null);
+
+  // Load deployment info
+  useEffect(() => {
+    const loadDeploymentInfo = async () => {
+      try {
+        const response = await fetch('/deployments/sepolia.json');
+        if (!response.ok) {
+          throw new Error(`Failed to load deployment info: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Loaded deployment info:", data);
+        setDeploymentInfo(data);
+      } catch (error) {
+        console.error("Error loading deployment info:", error);
+      }
+    };
+    
+    loadDeploymentInfo();
+  }, []);
 
   // Check if wallet is already connected
   useEffect(() => {
@@ -124,7 +146,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     disconnectWallet,
     provider,
     signer,
-    getContract
+    getContract,
+    deploymentInfo
   };
 
   return (

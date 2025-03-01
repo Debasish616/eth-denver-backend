@@ -828,12 +828,15 @@ export default function SwapPage() {
   
   // Basic ABI for SwapForNUSD contract
   const SWAP_FOR_NUSD_ABI = [
-    "function swapForNUSD(address token, uint256 tokenAmount) returns ()",
-    "function redeemNUSD(uint256 nusdAmount, address token) returns ()",
+    "function swapToNUSD(address token, uint256 tokenAmount)",
+    "function redeemFromNUSD(address token, uint256 nusdAmount)",
     "function calculateNUSDAmount(address token, uint256 tokenAmount) view returns (uint256)",
     "function calculateTokenAmount(address token, uint256 nusdAmount) view returns (uint256)",
-    "function getCollateralTokens() view returns (address[])",
-    "function getAddress() view returns (address)"
+    "function supportedCollaterals(address token) view returns (bool)",
+    "function collateralPrices(address token) view returns (uint256)",
+    "function collateralDecimals(address token) view returns (uint8)",
+    "function deposits(address, address) view returns (uint256)",
+    "function nusd() view returns (address)"
   ];
 
   // Test Faucet ABI for minting test tokens on Sepolia
@@ -923,7 +926,7 @@ export default function SwapPage() {
         // Now swap for NUSD
         const tokenAddress = await tokenContract.getAddress();
         setTxStatus(`Minting NUSD using ${fromAmount} ${fromToken.symbol}...`);
-        const swapTx = await swapContract.swapForNUSD(tokenAddress, amount);
+        const swapTx = await swapContract.swapToNUSD(tokenAddress, amount);
         setTxHash(swapTx.hash);
         
         // Wait for transaction to be mined
@@ -1004,7 +1007,7 @@ export default function SwapPage() {
         // Now redeem NUSD for collateral
         const tokenAddress = await tokenContract.getAddress();
         setTxStatus(`Burning ${fromAmount} NUSD to redeem ${toToken.symbol}...`);
-        const redeemTx = await swapContract.redeemNUSD(amount, tokenAddress);
+        const redeemTx = await swapContract.redeemFromNUSD(tokenAddress, amount);
         setTxHash(redeemTx.hash);
         
         // Wait for transaction to be mined
