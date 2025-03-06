@@ -14,13 +14,13 @@ import {
   X,
   Zap,
   RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
-  { name: "Swap", href: "/swap", icon: ArrowRightLeft },
   { name: "Stake", href: "/stake", icon: Coins },
+  { name: "Yield", href: "/yield", icon: TrendingUp },
   { name: "Wallet", href: "/wallet", icon: Wallet },
   { name: "Alerts", href: "/alerts", icon: Bell },
 ];
@@ -45,7 +45,7 @@ export default function Navbar() {
               >
                 <Zap className="h-8 w-8 text-primary mr-2" />
                 <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-                  NexusArb
+                  Nova
                 </span>
               </motion.div>
             </Link>

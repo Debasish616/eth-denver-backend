@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/navbar';
 import { WalletProvider } from '@/context/WalletContext';
+import { HedgingProvider } from '@/context/HedgingContext';
+import { cn } from '@/lib/utils';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,7 +22,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} dark`}>
+      <head>
+        <title>NexusArb | AI-Powered Arbitrage &amp; Staking Platform</title>
+        <meta name="description" content="Automated AI Arbitrage &amp; Yield on Autopilot" />
+      </head>
+      <body className={cn("dark")}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -28,14 +34,16 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <WalletProvider>
-            <div className="min-h-screen bg-gradient-to-br from-background/90 via-background to-background/80 overflow-hidden relative">
-              <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-              <Navbar />
-              <main>{children}</main>
-            </div>
-            <Toaster />
+            <HedgingProvider>
+              <div className="min-h-screen bg-gradient-to-br from-background/90 via-background to-background/80 overflow-hidden relative">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
+                <Navbar />
+                <main>{children}</main>
+              </div>
+            </HedgingProvider>
           </WalletProvider>
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   );

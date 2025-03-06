@@ -27,6 +27,12 @@ import {
   Shield,
   Lock,
   Plus,
+  Check,
+  X,
+  BarChart2,
+  Layers,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
 import TokenSelect from "@/components/swap/TokenSelect";
@@ -34,6 +40,19 @@ import TransactionHistoryItem from "@/components/swap/TransactionHistoryItem";
 import ChainSelect from "@/components/swap/ChainSelect";
 import MarketInfoItem from "@/components/swap/MarketInfoItem";
 import { useWallet } from "@/context/WalletContext";
+import { useHedging } from "@/context/HedgingContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { HedgingTerminal } from "@/components/HedgingTerminal";
+import { DemoHedgingButton } from "@/components/DemoHedgingButton";
 
 // Import ethers v6
 import { 
@@ -147,6 +166,7 @@ export default function SwapPage() {
   
   // Use wallet context instead of local state
   const { walletAddress: connectedAccount, isConnecting, connectWallet, signer, getContract } = useWallet();
+  const { initializeHedging } = useHedging();
   
   // Contract states
   const [swapContract, setSwapContract] = useState<Contract | null>(null);
@@ -167,6 +187,20 @@ export default function SwapPage() {
   const [txStatus, setTxStatus] = useState("");
   
   const [deploymentInfo, setDeploymentInfo] = useState<any>(null);
+  
+  // Add new state variables for hedging visualization
+  const [showHedgingInfo, setShowHedgingInfo] = useState(false);
+  const [isHedging, setIsHedging] = useState(false);
+  const [hedgingComplete, setHedgingComplete] = useState(false);
+  
+  // Add these new state variables inside the component
+  const [showHedgingModal, setShowHedgingModal] = useState(false);
+  
+  // Add new state variables for hedging terminal
+  const [showHedgingTerminal, setShowHedgingTerminal] = useState(false);
+  
+  // Add a state variable to store the amount for the hedging terminal
+  const [hedgingAmount, setHedgingAmount] = useState<number>(1000);
   
   // Set client-ready state to prevent hydration errors
   useEffect(() => {
@@ -1168,6 +1202,65 @@ export default function SwapPage() {
     setAddingTokenToWallet("");
   };
 
+  // Update the swap function to include the hedging step
+  const handleSwap = async () => {
+    if (!fromAmount || !fromToken || !toToken) return;
+    
+    setIsLoading(true);
+    setTxStatus("");
+    setTxHash("");
+    setShowHedgingInfo(false);
+    
+    try {
+      // Existing swap logic
+      const amount = parseFloat(fromAmount);
+      const token = fromToken.symbol;
+      
+      // Check if this is a USDC/USDT to NUSD conversion (for showing the hedging terminal)
+      const isStablecoinToNUSD = (fromToken.symbol === 'USDC' || fromToken.symbol === 'USDT') && 
+                               toToken.symbol === 'NUSD' && 
+                               swapDirection === 'mint';
+      
+      const fromTokenSymbol = fromToken.symbol;
+      const tokenContract = tokenContracts[fromTokenSymbol];
+      
+      if (!tokenContract) {
+        alert(`${fromTokenSymbol} contract not found. Please try again.`);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Store the amount for the hedging terminal if needed
+      if (isStablecoinToNUSD) {
+        setHedgingAmount(parseFloat(fromAmount) || 1000);
+      }
+      
+      // Call the swap function
+      await handleExecute();
+      
+      // After successful swap, show the hedging terminal for stablecoin to NUSD conversions
+      if (isStablecoinToNUSD) {
+        // First reset the form
+        setFromAmount("");
+        setToAmount("");
+        
+        // Then show the terminal
+        setShowHedgingTerminal(true);
+      } else {
+        // For other conversions, just reset the form as before
+        setFromAmount("");
+        setToAmount("");
+      }
+      
+    } catch (error: any) {
+      console.error("Transaction failed:", error);
+      setTxStatus(`Transaction failed: ${error.message}`);
+      alert(`Transaction failed: ${error.message || "Unknown error"}`);
+    }
+    
+    setIsLoading(false);
+  };
+
   return (
     <div className="min-h-screen pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1430,10 +1523,71 @@ export default function SwapPage() {
                         </div>
                       </div>
                       
+                      {/* Delta-Neutral Hedging Info - Show only for non-stablecoin -> NUSD swaps */}
+                      {showHedgingInfo && (
+                        <div className="p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-800/30">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-sm font-medium text-blue-400 flex items-center">
+                              <Shield className="h-4 w-4 mr-1" />
+                              Delta-Neutral Protection
+                            </h3>
+                            <div>
+                              {isHedging && !hedgingComplete && (
+                                <Badge variant="outline" className="bg-yellow-500/20 text-yellow-400 animate-pulse">
+                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                  Hedging...
+                                </Badge>
+                              )}
+                              {hedgingComplete && (
+                                <Badge variant="outline" className="bg-green-500/20 text-green-400">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Hedged
+                                </Badge>
+                              )}
+                              {!isHedging && !hedgingComplete && (
+                                <Badge variant="outline" className="bg-blue-500/20 text-blue-400">
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Ready
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 cursor-pointer" onClick={() => setShowHedgingModal(true)}>
+                            <div className="bg-background/30 p-3 rounded-lg">
+                              <div className="text-xs text-blue-300 mb-1">Price Protection</div>
+                              <div className="text-sm font-medium">
+                                {isHedging ? "Securing..." : hedgingComplete ? "99.7% Protected" : "Waiting..."}
+                              </div>
+                            </div>
+                            <div className="bg-background/30 p-3 rounded-lg">
+                              <div className="text-xs text-blue-300 mb-1">Execution Time</div>
+                              <div className="text-sm font-medium">
+                                {isHedging ? "In Progress" : hedgingComplete ? "2.4 seconds" : "~2-3 seconds"}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 text-xs text-muted-foreground flex justify-between items-center">
+                            <p>Your volatile assets are automatically hedged against market fluctuations using our delta-neutral strategy, protecting the value of your NUSD.</p>
+                            <Button variant="ghost" size="sm" onClick={() => setShowHedgingModal(true)} className="text-blue-400 hover:text-blue-300 p-1">
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Demo button for showing terminal simulation - only for stablecoins */}
+                      {(fromToken.symbol === 'USDC' || fromToken.symbol === 'USDT') && toToken.symbol === 'NUSD' && (
+                        <div className="flex justify-end mt-2">
+                          <DemoHedgingButton className="text-xs" />
+                        </div>
+                      )}
+                      
                       {/* Swap Button */}
                       <Button 
                         className="w-full h-14 text-lg bg-gradient-blue-purple hover:opacity-90 shadow-glow-blue text-white"
-                        onClick={handleExecute}
+                        onClick={handleSwap}
                         disabled={isLoading || !fromAmount || parseFloat(fromAmount) <= 0 || !connectedAccount}
                       >
                         {isLoading ? (
@@ -1671,6 +1825,106 @@ export default function SwapPage() {
           </div>
         </motion.div>
       </div>
+      
+      {/* Add the Hedging Terminal at the end */}
+      <HedgingTerminal 
+        isVisible={showHedgingTerminal}
+        fromToken={fromToken.symbol === 'USDC' ? 'USDC' : 'USDT'}
+        amount={hedgingAmount}
+        onClose={() => setShowHedgingTerminal(false)}
+      />
+      
+      {/* Hedging Modal with Detailed Information */}
+      <Dialog open={showHedgingModal} onOpenChange={setShowHedgingModal}>
+        <DialogContent className="sm:max-w-[600px] bg-gradient-to-b from-gray-900 to-gray-950 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center text-white">
+              <Shield className="h-5 w-5 mr-2 text-blue-400" />
+              Delta-Neutral Hedging
+            </DialogTitle>
+            <DialogDescription>
+              Protecting your NUSD from market volatility
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-2">
+            {/* Visual representation of hedging */}
+            <div className="bg-gray-800/50 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
+                  <div className="font-medium mb-2 flex items-center">
+                    <TrendingDown className="h-4 w-4 mr-1 text-red-400" />
+                    <span>Short Position</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {fromToken?.symbol === 'WETH' ? '0.5x Perpetual Short ETH' : 
+                     fromToken?.symbol === 'WBTC' ? '0.5x Perpetual Short BTC' : 
+                     'Short position on volatile asset'}
+                  </div>
+                  <div className="mt-2 text-sm text-red-400 font-medium">
+                    Hedges downside risk
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-purple-900/20 border border-purple-800/30 rounded-lg">
+                  <div className="font-medium mb-2 flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-1 text-green-400" />
+                    <span>Long Position</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {fromToken?.symbol === 'WETH' ? '0.5x ETH Reserve Position' : 
+                     fromToken?.symbol === 'WBTC' ? '0.5x BTC Reserve Position' : 
+                     'Reserve position on volatile asset'}
+                  </div>
+                  <div className="mt-2 text-sm text-green-400 font-medium">
+                    Maintains upside exposure
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-center my-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold border-4 border-gray-700">
+                  <Layers className="h-8 w-8" />
+                </div>
+              </div>
+              
+              <div className="p-3 bg-green-900/20 border border-green-800/30 rounded-lg">
+                <div className="font-medium mb-2 flex items-center">
+                  <BarChart2 className="h-4 w-4 mr-1 text-green-400" />
+                  <span>Net Delta-Neutral Position</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Combined positions cancel out price volatility while backing the value of your NUSD with real assets
+                </div>
+              </div>
+            </div>
+            
+            {/* Technical explanation */}
+            <div className="bg-gray-800/50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2">How It Works</h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                When you convert volatile assets like ETH or BTC to NUSD, our system automatically:
+              </p>
+              <ol className="text-sm text-muted-foreground space-y-2 ml-5 list-decimal">
+                <li>Creates a perfect balance between long and short positions</li>
+                <li>Uses on-chain derivatives to establish opposing positions</li>
+                <li>Maintains the dollar value of your deposit regardless of market movements</li>
+                <li>Rebalances positions as needed to maintain neutrality</li>
+              </ol>
+              <div className="mt-3 text-sm flex items-center text-blue-400">
+                <Info className="h-4 w-4 mr-1" />
+                <span>This makes NUSD more stable than traditional stablecoins that use only collateralization</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowHedgingModal(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

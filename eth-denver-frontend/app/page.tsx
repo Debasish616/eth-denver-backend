@@ -4,28 +4,28 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Zap, TrendingUp, BarChart3 } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, BarChart3, Bitcoin, Users } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
-  const [profits, setProfits] = useState(0);
-  const [sessions, setSessions] = useState(0);
+  const [totalStaked, setTotalStaked] = useState(0);
+  const [activeStakers, setActiveStakers] = useState(0);
   const [apy, setApy] = useState(0);
   
   // Animate stats on load
   useEffect(() => {
-    const profitInterval = setInterval(() => {
-      setProfits(prev => {
+    const stakedInterval = setInterval(() => {
+      setTotalStaked(prev => {
         if (prev < 1250000) return prev + 12500;
-        clearInterval(profitInterval);
+        clearInterval(stakedInterval);
         return 1250000;
       });
     }, 30);
     
-    const sessionInterval = setInterval(() => {
-      setSessions(prev => {
+    const stakersInterval = setInterval(() => {
+      setActiveStakers(prev => {
         if (prev < 1250) return prev + 25;
-        clearInterval(sessionInterval);
+        clearInterval(stakersInterval);
         return 1250;
       });
     }, 50);
@@ -39,8 +39,8 @@ export default function Home() {
     }, 100);
     
     return () => {
-      clearInterval(profitInterval);
-      clearInterval(sessionInterval);
+      clearInterval(stakedInterval);
+      clearInterval(stakersInterval);
       clearInterval(apyInterval);
     };
   }, []);
@@ -80,32 +80,32 @@ export default function Home() {
             variants={item}
             className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6"
           >
-            <span className="text-gradient-blue-purple">Automated AI Arbitrage</span>
+            <span className="text-gradient-blue-purple">Bringing the most profitable</span>
             <br />
-            <span className="text-gradient-purple-pink">& Yield on Autopilot</span> 
-            <span className="ml-2">🚀</span>
+            <span className="text-gradient-purple-pink">trade in DeFi to Bitcoin</span> 
+            <span className="ml-2">₿</span>
           </motion.h1>
           
           <motion.p 
             variants={item}
             className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            Leverage cutting-edge AI to identify and execute profitable arbitrage opportunities across multiple exchanges while earning passive yield.
+            Maximize your Bitcoin returns with our advanced DeFi strategies and secure staking solutions.
           </motion.p>
           
           <motion.div 
             variants={item}
             className="flex flex-col sm:flex-row justify-center gap-4 mb-16"
           >
-            <Link href="/dashboard">
+            <Link href="/stake">
               <Button size="lg" className="bg-gradient-blue-purple hover:opacity-90 shadow-glow-blue text-white font-medium px-8 py-6 text-lg">
-                Start Arbitrage
+                Start Staking
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/stake">
+            <Link href="/yield">
               <Button size="lg" variant="outline" className="border-primary/50 hover:bg-primary/10 font-medium px-8 py-6 text-lg">
-                Earn Yield
+                View Yields
                 <TrendingUp className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -123,15 +123,15 @@ export default function Home() {
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
-                  <BarChart3 className="h-5 w-5 text-blue-400" />
+                  <Bitcoin className="h-5 w-5 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-medium text-muted-foreground">Total Arbitrage Profits</h3>
+                <h3 className="text-lg font-medium text-muted-foreground">Total BTC Staked</h3>
               </div>
               <p className="text-3xl font-bold text-gradient-blue-purple">
-                ${profits.toLocaleString()}
+                {(totalStaked / 40000).toFixed(2)} BTC
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Across all trading pairs
+                Across all strategies
               </p>
             </div>
             <div className="h-2 bg-gradient-blue-purple"></div>
@@ -141,15 +141,15 @@ export default function Home() {
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mr-3">
-                  <Zap className="h-5 w-5 text-purple-400" />
+                  <Users className="h-5 w-5 text-purple-400" />
                 </div>
-                <h3 className="text-lg font-medium text-muted-foreground">Active AI Sessions</h3>
+                <h3 className="text-lg font-medium text-muted-foreground">Active Users</h3>
               </div>
               <p className="text-3xl font-bold text-gradient-purple-pink">
-                {sessions.toLocaleString()}
+                {activeStakers.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Trading bots running now
+                Growing community
               </p>
             </div>
             <div className="h-2 bg-gradient-purple-pink"></div>
@@ -161,7 +161,7 @@ export default function Home() {
                 <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center mr-3">
                   <TrendingUp className="h-5 w-5 text-pink-400" />
                 </div>
-                <h3 className="text-lg font-medium text-muted-foreground">Staking APY</h3>
+                <h3 className="text-lg font-medium text-muted-foreground">BTC APY</h3>
               </div>
               <p className="text-3xl font-bold text-gradient-purple-pink">
                 {apy.toFixed(1)}%
@@ -185,30 +185,30 @@ export default function Home() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient-blue-purple">
-            Powered by Advanced AI Technology
+            Bitcoin-First DeFi Platform
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our platform leverages cutting-edge machine learning to identify profitable trading opportunities across exchanges.
+            Unlock the full potential of your Bitcoin with our advanced DeFi strategies and secure staking solutions.
           </p>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              title: "AI-Powered Arbitrage",
-              description: "Our algorithms scan multiple exchanges to find price discrepancies and execute trades automatically.",
-              icon: <Zap className="h-10 w-10 text-blue-400" />,
+              title: "Bitcoin Staking",
+              description: "Earn passive income on your Bitcoin through our secure staking pools.",
+              icon: <Bitcoin className="h-10 w-10 text-blue-400" />,
               delay: 0.1
             },
             {
-              title: "High-Yield Staking",
-              description: "Earn passive income by staking your assets with industry-leading APY rates.",
+              title: "High BTC Yields",
+              description: "Access premium yields with flexible lock periods tailored to your needs.",
               icon: <TrendingUp className="h-10 w-10 text-purple-400" />,
               delay: 0.2
             },
             {
               title: "Real-Time Analytics",
-              description: "Monitor your portfolio performance with comprehensive dashboards and insights.",
+              description: "Track your Bitcoin earnings and performance with detailed insights.",
               icon: <BarChart3 className="h-10 w-10 text-pink-400" />,
               delay: 0.3
             }
@@ -240,14 +240,14 @@ export default function Home() {
         >
           <div className="p-8 md:p-12 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gradient-blue-purple">
-              Ready to Start Your Arbitrage Journey?
+              Ready to Maximize Your Bitcoin?
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Join thousands of traders who are already leveraging our AI-powered platform to maximize their profits.
+              Join thousands of users who are already earning premium yields on their Bitcoin holdings.
             </p>
-            <Link href="/dashboard">
+            <Link href="/stake">
               <Button size="lg" className="bg-gradient-blue-purple hover:opacity-90 shadow-glow-blue text-white font-medium px-8 py-6 text-lg">
-                Launch Dashboard
+                Start Earning Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

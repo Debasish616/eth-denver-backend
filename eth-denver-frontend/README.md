@@ -1,5 +1,12 @@
 # ETH Denver Frontend
 
+## Overview
+
+NexusArb is a next-generation stablecoin protocol with:
+- Delta-neutral hedging for risk management
+- Integrated yield generation
+- EigenLayer Actively Validated Service (AVS) for decentralized security
+
 ## Token Contracts Deployment
 
 This repository includes ERC20 token contracts for testing on Sepolia testnet. Each token contract has a public mint function that allows users to mint up to 1000 tokens at once, with a cooldown period between mints.
@@ -71,6 +78,22 @@ Users can get test tokens in their MetaMask wallet by:
 5. Alternatively, clicking "Mint All Test Tokens" to mint all tokens at once
 
 The tokens will appear in their MetaMask wallet with the correct balance after minting is successful.
+
+## Delta-Neutral Hedging System
+
+NexusArb implements a sophisticated delta-neutral hedging strategy to maintain stablecoin stability. See [README-HEDGING.md](./README-HEDGING.md) for detailed documentation of the hedging components.
+
+## EigenLayer AVS Integration
+
+We've built a novel Actively Validated Service (AVS) on EigenLayer that provides decentralized verification and security for our delta-neutral hedging operations. This allows NexusArb to leverage Ethereum's economic security through restaking.
+
+Key features of our EigenLayer AVS:
+- Decentralized position verification by EigenLayer operators
+- Cryptographic proofs of delta-neutrality
+- Slashing conditions for malicious operators
+- Transparent risk assessment for stablecoin users
+
+See [README-EIGENLAYER-AVS.md](./README-EIGENLAYER-AVS.md) for comprehensive documentation on our EigenLayer integration, including technical architecture, implementation details, and deployment instructions.
 
 ## Running the Application
 
