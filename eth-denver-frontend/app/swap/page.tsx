@@ -56,20 +56,19 @@ declare global {
 // We'll fetch the actual addresses from our deployment file
 let tokens = [
   { id: 1, symbol: "NUSD", name: "Nova USD", balance: 0, price: 1.00, logo: "💲", isNUSD: true, decimals: 18, address: "" },
-  { id: 2, symbol: "USDC", name: "USD Coin", balance: 0, price: 1.00, logo: "🔵", isNUSD: false, decimals: 6, address: "" },
-  { id: 3, symbol: "USDT", name: "Tether USD", balance: 0, price: 1.00, logo: "🟢", isNUSD: false, decimals: 6, address: "" },
-  { id: 4, symbol: "WBTC", name: "Wrapped Bitcoin", balance: 0, price: 60000.00, logo: "₿", isNUSD: false, decimals: 8, address: "" },
-  { id: 5, symbol: "WETH", name: "Wrapped Ethereum", balance: 0, price: 3000.00, logo: "Ξ", isNUSD: false, decimals: 18, address: "" },
+  { id: 2, symbol: "USDC", name: "USD Coin", balance: 0, price: 1.00, logo: "https://raw.githubusercontent.com/Uniswap/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png", isNUSD: false, decimals: 6, address: "" },
+  { id: 3, symbol: "USDT", name: "Tether USD", balance: 0, price: 1.00, logo: "https://raw.githubusercontent.com/Uniswap/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png", isNUSD: false, decimals: 6, address: "" },
+  { id: 4, symbol: "coreBTC", name: "CoreBTC", balance: 0, price: 60000.00, logo: "₿", isNUSD: false, decimals: 18, address: "" },
 ];
 
 // Mock data for chains
 const chains = [
-  { id: 1, name: "Ethereum", logo: "Ξ", color: "text-blue-400" },
-  { id: 2, name: "Solana", logo: "◎", color: "text-purple-400" },
-  { id: 3, name: "Avalanche", logo: "🔺", color: "text-red-400" },
-  { id: 4, name: "Polygon", logo: "⬡", color: "text-purple-500" },
-  { id: 5, name: "Binance Smart Chain", logo: "⛓️", color: "text-yellow-400" },
-  { id: 6, name: "Arbitrum", logo: "🔷", color: "text-blue-500" },
+  { id: 1, name: "CoreDAO", logo: "Ξ", color: "text-blue-400" },
+  { id: 2, name: "Ethereum", logo: "◎", color: "text-purple-400" },
+  { id: 3, name: "Arbitrum", logo: "🔺", color: "text-red-400" },
+  { id: 4, name: "Optimism", logo: "⬡", color: "text-purple-500" },
+  { id: 5, name: "Base", logo: "⛓️", color: "text-yellow-400" },
+  { id: 6, name: "Polygon", logo: "🔷", color: "text-blue-500" },
 ];
 
 // Fixed market data to prevent hydration errors
@@ -85,8 +84,8 @@ const transactionHistory = [
   { 
     id: 1,
     type: "swap", 
-    from: "ETH", 
-    to: "nUSD", 
+    from: "coreBTC", 
+    to: "NUSD", 
     amount: "0.5", 
     value: "1,622.84", 
     time: "2 mins ago",
@@ -95,21 +94,21 @@ const transactionHistory = [
   { 
     id: 2,
     type: "bridge", 
-    from: "nUSD", 
-    to: "nUSD", 
+    from: "NUSD", 
+    to: "NUSD", 
     amount: "500", 
     value: "500", 
     time: "1 hour ago",
     status: "completed",
-    fromChain: "Ethereum",
-    toChain: "Solana"
+    fromChain: "CoreDAO",
+    toChain: "Ethereum"
   },
   { 
     id: 3,
     type: "swap", 
-    from: "BTC", 
-    to: "ETH", 
-    amount: "0.02", 
+    from: "USDC", 
+    to: "NUSD", 
+    amount: "1000", 
     value: "1,046.92", 
     time: "3 hours ago",
     status: "completed"
@@ -117,14 +116,14 @@ const transactionHistory = [
   { 
     id: 4,
     type: "bridge", 
-    from: "SOL", 
-    to: "SOL", 
-    amount: "15", 
+    from: "NUSD", 
+    to: "NUSD", 
+    amount: "1500", 
     value: "1,536.75", 
     time: "1 day ago",
     status: "completed",
-    fromChain: "Solana",
-    toChain: "Ethereum"
+    fromChain: "CoreDAO",
+    toChain: "Arbitrum"
   },
 ];
 
@@ -1178,26 +1177,16 @@ export default function SwapPage() {
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold">Swap & Bridge</h1>
-              <p className="text-muted-foreground">Swap tokens or bridge assets across chains</p>
+              <h1 className="text-3xl font-bold">Nova USD Swap</h1>
+              <p className="text-muted-foreground">Mint and burn NUSD stablecoin on CoreDAO</p>
             </div>
             
             {/* Network indicator */}
             <div className="flex items-center mt-4 md:mt-0 space-x-2">
               {currentChainId && (
                 <Badge variant={currentChainId === SEPOLIA_CHAIN_ID ? "default" : "destructive"} className="px-3 py-1">
-                  {currentChainId === SEPOLIA_CHAIN_ID ? "Sepolia Testnet" : "Wrong Network"}
+                  {currentChainId === SEPOLIA_CHAIN_ID ? "CoreDAO Testnet" : "Wrong Network"}
                 </Badge>
-              )}
-              
-              {currentChainId !== SEPOLIA_CHAIN_ID && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={switchToSepoliaNetwork}
-                >
-                  Switch to Sepolia
-                </Button>
               )}
             </div>
           </div>
@@ -1283,9 +1272,9 @@ export default function SwapPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <Label>From</Label>
-                          <span className="text-muted-foreground">
+                          {/* <span className="text-muted-foreground">
                             Balance: {fromToken.balance.toFixed(4)} {fromToken.symbol}
-                          </span>
+                          </span> */}
                         </div>
                         
                         <div className="flex space-x-2">
@@ -1313,7 +1302,17 @@ export default function SwapPage() {
                               <SelectValue>
                                 <div className="flex items-center">
                                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                    <span className="text-lg">{fromToken.logo}</span>
+                                    {fromToken.logo.startsWith('http') ? (
+                                      <Image 
+                                        src={fromToken.logo} 
+                                        alt={fromToken.symbol}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                      />
+                                    ) : (
+                                      <span className="text-lg">{fromToken.logo}</span>
+                                    )}
                                   </div>
                                   <span>{fromToken.symbol}</span>
                                 </div>
@@ -1324,7 +1323,17 @@ export default function SwapPage() {
                                 <SelectItem key={token.id} value={token.id.toString()}>
                                   <div className="flex items-center">
                                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                      <span>{token.logo}</span>
+                                      {token.logo.startsWith('http') ? (
+                                        <Image 
+                                          src={token.logo} 
+                                          alt={token.symbol}
+                                          width={20}
+                                          height={20}
+                                          className="rounded-full"
+                                        />
+                                      ) : (
+                                        <span>{token.logo}</span>
+                                      )}
                                     </div>
                                     <div>
                                       <div className="font-medium">{token.symbol}</div>
@@ -1354,9 +1363,9 @@ export default function SwapPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <Label>To (Estimated)</Label>
-                          <span className="text-muted-foreground">
+                          {/* <span className="text-muted-foreground">
                             Balance: {toToken.balance.toFixed(4)} {toToken.symbol}
-                          </span>
+                          </span> */}
                         </div>
                         
                         <div className="flex space-x-2">
@@ -1382,7 +1391,17 @@ export default function SwapPage() {
                               <SelectValue>
                                 <div className="flex items-center">
                                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                    <span className="text-lg">{toToken.logo}</span>
+                                    {toToken.logo.startsWith('http') ? (
+                                      <Image 
+                                        src={toToken.logo} 
+                                        alt={toToken.symbol}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                      />
+                                    ) : (
+                                      <span className="text-lg">{toToken.logo}</span>
+                                    )}
                                   </div>
                                   <span>{toToken.symbol}</span>
                                 </div>
@@ -1393,7 +1412,17 @@ export default function SwapPage() {
                                 <SelectItem key={token.id} value={token.id.toString()}>
                                   <div className="flex items-center">
                                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                                      <span>{token.logo}</span>
+                                      {token.logo.startsWith('http') ? (
+                                        <Image 
+                                          src={token.logo} 
+                                          alt={token.symbol}
+                                          width={20}
+                                          height={20}
+                                          className="rounded-full"
+                                        />
+                                      ) : (
+                                        <span>{token.logo}</span>
+                                      )}
                                     </div>
                                     <div>
                                       <div className="font-medium">{token.symbol}</div>
@@ -1419,10 +1448,10 @@ export default function SwapPage() {
                           <span>{slippage}%</span>
                         </div>
                         
-                        <div className="flex justify-between">
+                        {/* <div className="flex justify-between">
                           <span className="text-muted-foreground">Estimated Gas Fee</span>
                           <span>${gasFee}</span>
-                        </div>
+                        </div> */}
                         
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Minimum Received</span>
@@ -1461,8 +1490,8 @@ export default function SwapPage() {
                           rel="noopener noreferrer"
                           className="text-xs text-blue-400 flex items-center mt-1 hover:underline"
                         >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          View on Etherscan
+                          {/* <ExternalLink className="h-3 w-3 mr-1" /> */}
+                     
                         </a>
                       )}
                     </div>
@@ -1534,22 +1563,17 @@ export default function SwapPage() {
               {/* Market Info */}
               <Card className="glassmorphism">
                 <CardHeader>
-                  <CardTitle className="text-lg">Sepolia Testnet Tokens</CardTitle>
-                  <CardDescription>Get real testnet tokens for NUSD platform</CardDescription>
+                  <CardDescription>Get test tokens for Nova USD platform</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-900/20 border border-blue-800/30 rounded-lg mb-4">
-                      <h3 className="font-medium text-blue-400 flex items-center mb-2">
-                        <Info className="h-4 w-4 mr-1" />
-                        Sepolia Testnet Setup
-                      </h3>
                       <p className="text-sm text-muted-foreground mb-3">
-                        You're now using Sepolia testnet. Follow these steps to test the NUSD platform:
+                        You're now using CoreDAO testnet. Follow these steps to test the Nova USD platform:
                       </p>
                       <ol className="text-sm text-muted-foreground list-decimal pl-5 space-y-2">
-                        <li>Get Sepolia ETH from a faucet (button below)</li>
-                        <li>Mint test tokens (USDC, USDT, WBTC, WETH) to your wallet</li>
+                        <li>Get CoreDAO testnet tokens from a faucet (button below)</li>
+                        <li>Mint test tokens (USDC, USDT, coreBTC) to your wallet</li>
                         <li>Use these test tokens as collateral to mint NUSD in the Swap interface</li>
                         <li>Later, you can burn NUSD to redeem your original collateral</li>
                       </ol>
@@ -1562,7 +1586,7 @@ export default function SwapPage() {
                           onClick={openSepoliaFaucet}
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
-                          Get Sepolia ETH
+                          Get CoreDAO Testnet Tokens
                         </Button>
                         
                         <Button 
@@ -1582,86 +1606,23 @@ export default function SwapPage() {
                       </div>
                     </div>
                     
-                    {clientReady && tokens.map((token, index) => (
-                      <motion.div
-                        key={token.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="flex justify-between items-center p-3 rounded-lg bg-background/50 border border-border/30"
-                      >
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
-                            <span className="text-lg">{token.logo}</span>
-                          </div>
-                          <div>
-                            <div className="font-medium">{token.symbol}</div>
-                            <div className="text-xs text-muted-foreground">{token.name}</div>
-                            <div className="text-xs font-medium mt-1">
-                              Balance: {tokensWithBalances.find(t => t.symbol === token.symbol)?.balance.toFixed(token.decimals === 8 ? 8 : 4) || '0.0000'}
-                            </div>
-                            {token.isNUSD && (
-                              <div className="text-xs text-blue-400 mt-1">Mint via Swap using collateral</div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex items-center"
-                            onClick={() => addTokenToMetaMask(token)}
-                            disabled={addingTokenToWallet === token.symbol || !networkReady || !connectedAccount}
-                          >
-                            {addingTokenToWallet === token.symbol ? (
-                              <RefreshCw className="h-4 w-4 animate-spin mr-1" />
-                            ) : (
-                              <Plus className="h-4 w-4 mr-1" />
-                            )}
-                            <span>Add to Wallet</span>
-                          </Button>
-                          
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="flex items-center"
-                            onClick={() => mintTestToken(token)}
-                            disabled={isMinting || !networkReady || !connectedAccount || token.isNUSD}
-                            title={token.isNUSD ? "NUSD can only be minted via the Swap interface using collateral tokens" : ""}
-                          >
-                            {isMinting && addingTokenToWallet === token.symbol ? (
-                              <RefreshCw className="h-4 w-4 animate-spin mr-1" />
-                            ) : (
-                              <Zap className="h-4 w-4 mr-1" />
-                            )}
-                            <span>Mint {token.symbol}</span>
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                    {!clientReady && (
-                      <div className="p-4 text-center text-muted-foreground">
-                        Loading token data...
-                      </div>
-                    )}
-                    
+                    {/* Update the warning box */}
                     <div className="p-4 bg-yellow-900/20 border border-yellow-800/30 rounded-lg">
                       <h3 className="font-medium text-yellow-400 flex items-center mb-2">
                         <AlertTriangle className="h-4 w-4 mr-1" />
-                        On-Chain Interactions
+                        Nova USD on CoreDAO
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        All actions on this page perform real on-chain transactions:
+                        Nova USD is a decentralized stablecoin protocol on CoreDAO:
                       </p>
                       <ul className="text-sm text-muted-foreground list-disc pl-5 mt-2 space-y-1">
-                        <li>Minting tokens creates real Sepolia testnet tokens in your wallet</li>
-                        <li>NUSD can only be minted by depositing collateral tokens (USDC, USDT, WBTC, WETH)</li>
-                        <li>NUSD minting locks your collateral tokens, which can be redeemed by burning NUSD</li>
+                        <li>NUSD is backed by liquid staking derivatives and perpetual futures</li>
+                        <li>Mint NUSD using USDC, USDT, or coreBTC as collateral</li>
+                        <li>NUSD can be bridged across multiple chains including CoreDAO, Ethereum, and Arbitrum</li>
                         <li>All balances are fetched from the blockchain in real-time</li>
                       </ul>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Since these are testnet tokens, they have no real value but work exactly like mainnet tokens.
+                        This is a testnet implementation of Nova USD on CoreDAO chain.
                       </p>
                     </div>
                   </div>

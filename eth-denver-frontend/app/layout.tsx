@@ -9,7 +9,7 @@ import { WalletProvider } from '@/context/WalletContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'NexusArb | AI-Powered Arbitrage & Staking Platform',
+  title: 'Nova | AI-Powered Arbitrage & Staking Platform',
   description: 'Automated AI Arbitrage & Yield on Autopilot',
 };
 
@@ -29,7 +29,6 @@ export default function RootLayout({
         >
           <WalletProvider>
             <div className="min-h-screen bg-gradient-to-br from-background/90 via-background to-background/80 overflow-hidden relative">
-              <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
               <Navbar />
               <main>{children}</main>
             </div>
